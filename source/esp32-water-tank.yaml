@@ -1,0 +1,146 @@
+esphome:
+  name: esp32-water-tank
+  friendly_name: ESP32 Water Tank
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+logger:
+
+api:
+  encryption:
+    key: !secret esp32_watertank_api_encryption_key
+
+ota:
+  password: !secret esp32_watertank_ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  ap:
+    ssid: !secret esp32_watertank_ap_ssid
+    password: !secret esp32_watertank_ap_password
+
+captive_portal:
+    
+button:
+  - platform: restart
+    name: Restart
+  - platform: safe_mode
+    name: "Restart (Safe Mode)"
+  - platform: shutdown
+    name: Shutdown
+
+# Constants that should be measured manually
+substitutions:
+  volume_height: "1.52"      # ground to max water level
+  volume_radius: "1.46 / 2"  # radius of tank
+  number_of_tanks: "2"       # the number of tanks of equal size
+  distance_to_full: "0.204"   # distance measured by ultrasonic sensor to max water level
+  distance_to_empty: "1.724"  # distance measured by ultrasonic sensor to min water level
+  capacity_litre: "5000"     # max capacity of tank, used to calculate level percentage
+
+sensor:
+
+  # Diagnostic
+
+  - platform: uptime
+    name: Uptime
+    update_interval: 60s
+
+  - platform: wifi_signal
+    name: "WiFi Signal dB"
+    id: wifi_signal_db
+    update_interval: 60s
+    entity_category: "diagnostic"
+
+  - platform: copy
+    source_id: wifi_signal_db
+    name: "WiFi Signal Percent"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "%"
+    entity_category: "diagnostic"
+    device_class: ""
+
+  # Ultrasonic sensor: JSN-SR04T-2.0
+
+  - platform: ultrasonic
+    trigger_pin: GPIO16
+    echo_pin: GPIO17
+    name: Distance Measured
+    accuracy_decimals: 3
+    update_interval: 10s
+    pulse_time: 10us
+    filters:
+      - filter_out: nan
+    on_value:
+      then:
+        sensor.template.publish:
+          id: level_height
+          state: !lambda "return x;"
+
+  # Calculate the height of the water level, then calculate litres and percentage and publish to those sensors
+
+  - platform: template
+    name: "Level Height"
+    id: level_height
+    icon: "mdi:arrow-expand-vertical"
+    unit_of_measurement: "m"
+    accuracy_decimals: 3
+    filters:
+      - filter_out: nan
+      - median:
+          window_size: 7
+          send_every: 4
+          send_first_at: 3
+      - calibrate_linear:
+        - ${distance_to_full} -> ${volume_height}
+        - ${distance_to_empty} -> 0.0
+    on_value:
+      then:
+        # Skip calculations if Level Height hasn't changed much
+        - if:
+            condition:
+              lambda: |-
+                static float last_value = 0;
+                float value_change = abs(x - last_value);
+                ESP_LOGD("custom", "x = %f, last_value = %f, change = %f", x, last_value, value_change);
+                if (value_change < 0.0005) {
+                  ESP_LOGD("custom", "Skipping publish to template sensors, value has not changed enough");
+                  return false;
+                }
+                last_value = x;
+                return true;
+            then:
+              sensor.template.publish:
+                id: level_litre
+                # Formula for volume, * 1000 for litres, * number of tanks:
+                # V = π * radius² * height * 1000 * n
+                state: !lambda |-
+                  static float ratio_value = M_PI * pow(${volume_radius}, 2) * 1000 * ${number_of_tanks};
+                  return x * ratio_value;
+
+  - platform: template
+    name: "Level Litre"
+    id: level_litre
+    icon: "mdi:water"
+    unit_of_measurement: "l"
+    accuracy_decimals: 0
+    on_value:
+      then:
+        sensor.template.publish:
+          id: level_percent
+          # Formula for percentage
+          # P = litre / capacity * 100
+          state: !lambda |-
+            return x / ${capacity_litre} * 100;
+
+  - platform: template
+    name: Level Percent
+    id: level_percent
+    icon: "mdi:water-percent"
+    unit_of_measurement: "%"
