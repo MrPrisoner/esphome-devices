@@ -1,0 +1,157 @@
+esphome:
+  name: esp32-devkit-v1
+  friendly_name: ESP32 DEVKIT V1
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret esp32_devkit_api_encryption_key
+
+ota:
+  password: !secret esp32_devkit_ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+captive_portal:
+
+button:
+  - platform: restart
+    name: Restart
+  - platform: safe_mode
+    name: "Restart (Safe Mode)"
+  - platform: shutdown
+    name: Shutdown
+
+globals:
+  - id: show_warning
+    type: bool
+    restore_value: no
+    initial_value: "false"
+    
+sensor:
+
+  # Diagnostic
+
+  - platform: uptime
+    name: Uptime
+    update_interval: 60s
+
+  - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
+    name: "WiFi Signal dB"
+    id: wifi_signal_db
+    update_interval: 60s
+    entity_category: "diagnostic"
+
+  - platform: copy # Reports the WiFi signal strength in %
+    source_id: wifi_signal_db
+    name: "WiFi Signal Percent"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "%"
+    entity_category: "diagnostic"
+    device_class: ""
+
+  # Home Assistant
+
+  - platform: homeassistant
+    name: "Load Percentage"
+    id: sunsynk_load_percentage
+    entity_id: sensor.sunsynk_load_percentage
+    on_value: 
+      then:
+        globals.set:
+          id: show_warning
+          value: !lambda "return x > 50;"
+
+  - platform: homeassistant
+    name: "PV Power"
+    id: sunsynk_pv_power
+    entity_id: sensor.sunsynk_pv_power
+
+  - platform: homeassistant
+    name: "Grid Power"
+    id: sunsynk_grid_power
+    entity_id: sensor.sunsynk_grid_power
+
+  - platform: homeassistant
+    name: "Load Power"
+    id: pv_power_minus_load_power
+    entity_id: sensor.pv_power_minus_load_power
+
+  - platform: homeassistant
+    name: "Battery Power"
+    id: sunsynk_battery_power
+    entity_id: sensor.sunsynk_battery_power
+
+  - platform: homeassistant
+    name: "Battery SoC"
+    id: sunsynk_battery_state_of_charge
+    entity_id: sensor.sunsynk_battery_state_of_charge
+
+
+# OLED Display 128x128: SSD1327
+
+spi:
+  mosi_pin: GPIO23 # DIN (blue)
+  clk_pin: GPIO18 # CLK (yellow)
+
+font:
+  # gfonts://family[@weight]
+  - file: "gfonts://Roboto"
+    id: roboto_l
+    size: 24
+  - file: "gfonts://Roboto"
+    id: roboto_s
+    size: 16
+  
+color:
+  - id: color_fill
+    white: 50%
+
+# graph:
+#   - id: distance_graph
+#     sensor: sensor_distance
+#     duration: 1min
+#     width: 128
+#     height: 64
+
+display:
+  - platform: ssd1327_spi
+    model: "SSD1327 128x128"
+    cs_pin: GPIO19 # CS (orange)
+    dc_pin: GPIO21 # DC (green)
+    reset_pin: GPIO22 # RST (white)
+    brightness: 100%
+    rotation: 90
+    lambda: |-
+      if (isnan(id(sunsynk_pv_power).state)) {
+        it.printf(0, 0, id(roboto_l), "Loading...");
+      }
+      else {
+        it.printf(0, 0, id(roboto_s), "P:  %.2f kW", id(sunsynk_pv_power).state / 1000);
+        it.printf(0, 22, id(roboto_s), "G:  %.2f kW", id(sunsynk_grid_power).state / 1000);
+        it.printf(0, 44, id(roboto_s), "B:  %.2f kW", id(sunsynk_battery_power).state / 1000);
+        it.printf(96, 44, id(roboto_s), "%.0f%%", id(sunsynk_battery_state_of_charge).state);
+        it.printf(0, 66, id(roboto_s), "LvP:  %.2f kW", id(pv_power_minus_load_power).state / 1000);
+        it.filled_rectangle(1, 101, id(sunsynk_load_percentage).state / 100 * (it.get_width() - 2), 26, id(color_fill));
+        it.rectangle(0, 100, it.get_width(), 28);
+
+        if (id(show_warning)) {
+          static bool blink = true;
+          if (blink)
+            it.printf(4, 100, id(roboto_l), "WARNING!");
+          blink = !blink;
+        }
+        else
+          it.printf(50, 100, id(roboto_l), "%.0f%%", id(sunsynk_load_percentage).state);
+      }
