@@ -1,0 +1,287 @@
+substitutions:
+  trigger_pin: GPIO27
+  lock_pin: GPIO26
+  status_led_pin: GPIO25
+  temp_sensor_pin: GPIO23
+  temp_sensor_address: "0xa33c01b556e48e28"
+
+esphome:
+  name: esp32-gate-controller
+  friendly_name: ESP32 Gate Controller
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+logger:
+
+api:
+  encryption:
+    key: !secret esp32_gatecontroller_api_encryption_key
+
+ota:
+  password: !secret esp32_gatecontroller_ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: NONE
+
+  ap:
+    ssid: !secret esp32_gatecontroller_ap_ssid
+    password: !secret esp32_gatecontroller_ap_password
+
+captive_portal:
+
+cover:
+  - platform: template
+    name: "Gate"
+    device_class: gate
+    id: gate_cover
+    open_action:
+      - button.press: trigger_button
+    close_action:
+      - button.press: trigger_button
+    stop_action:
+      - button.press: trigger_button
+
+output:
+  - platform: gpio
+    pin: ${trigger_pin}
+    id: trigger_output
+
+switch:
+  - platform: gpio
+    pin: ${lock_pin}
+    id: lock_switch
+    icon: "mdi:lock"
+    name: "Lock"
+    on_turn_on: 
+      then:
+        - logger.log:
+            format: "GPIO ${lock_pin}: Locked"
+            level: DEBUG
+    on_turn_off: 
+      then:
+        - logger.log:
+            format: "GPIO ${lock_pin}: Unlocked"
+            level: DEBUG
+
+binary_sensor:
+  - platform: gpio
+    pin: ${status_led_pin}
+    id: status_led
+    name: "Status LED"
+    entity_category: diagnostic
+    icon: mdi:led-outline
+    disabled_by_default: true
+    publish_initial_state: true
+    filters:
+      delayed_on_off: 100ms
+    on_state: 
+      then:
+        - logger.log:
+            format: "GPIO ${status_led_pin}: %d"
+            args: [ 'x' ]
+            level: DEBUG
+    on_multi_click:
+      # Closed
+      # LED Off: Gate is closed
+      - timing:
+          - OFF for at least 2000ms
+        then:
+          - cover.template.publish:
+              id: gate_cover
+              state: CLOSED
+              current_operation: IDLE
+          - binary_sensor.template.publish:
+              id: problem_pillar_light_override
+              state: OFF
+          - binary_sensor.template.publish:
+              id: problem_no_mains
+              state: OFF
+          - binary_sensor.template.publish:
+              id: problem_battery_low
+              state: OFF
+          - binary_sensor.template.publish:
+              id: problem_multiple_collision
+              state: OFF
+        invalid_cooldown: 100ms
+      # Open
+      # LED On: Gate is partially or fully open
+      - timing:
+          - ON for at least 2000ms
+        then:
+          - cover.template.publish:
+              id: gate_cover
+              state: OPEN
+              current_operation: IDLE
+        invalid_cooldown: 100ms
+      # Closing
+      # LED Continuous fast flash: Gate is closing
+      - timing:
+          - ON for 100ms to 200ms
+          - OFF for 100ms to 200ms
+          - ON for 100ms to 200ms
+          - OFF for 100ms to 200ms
+          - ON for 100ms to 200ms
+          - OFF for 100ms to 200ms
+          - ON for 100ms to 200ms
+          - OFF for 100ms to 200ms
+          - ON for 100ms to 200ms
+          - OFF for 100ms to 200ms
+          - ON for 100ms to 200ms
+          - OFF for 100ms to 200ms
+          - ON for 100ms to 200ms
+          - OFF for 100ms to 200ms
+          - ON for 100ms to 200ms
+          - OFF for 100ms to 200ms
+        then:
+          - cover.template.publish:
+              id: gate_cover
+              current_operation: CLOSING
+        invalid_cooldown: 100ms
+      # Opening
+      # LED Continuous slow flash: Gate is opening
+      - timing:
+          - ON for 200ms to 400ms
+          - OFF for 200ms to 400ms
+          - ON for 200ms to 400ms
+          - OFF for 200ms to 400ms
+          - ON for 200ms to 400ms
+          - OFF for 200ms to 400ms
+          - ON for 200ms to 400ms
+          - OFF for 200ms to 400ms
+        then:
+          - cover.template.publish:
+              id: gate_cover
+              current_operation: OPENING
+        invalid_cooldown: 100ms
+      # Pillar light override
+      # The status LED will flash once every two seconds to indicate that the courtesy light is on permanently
+      - timing:
+          - ON for 200ms to 300ms
+          - OFF for 1700ms to 1800ms
+        then:
+          - binary_sensor.template.publish:
+              id: problem_pillar_light_override
+              state: ON
+        invalid_cooldown: 100ms
+      # No Mains
+      # LED Two flashes every two seconds: No mains present
+      - timing:
+          - ON for 200ms to 300ms
+          - OFF for 200ms to 300ms
+          - ON for 200ms to 300ms
+          - OFF for 1200ms to 1400ms
+        then:
+          - binary_sensor.template.publish:
+              id: problem_no_mains
+              state: ON
+        invalid_cooldown: 100ms
+      # Battery Low
+      # LED Three flashes every two seconds: Battery voltage is low
+      - timing:
+          - ON for 200ms to 300ms
+          - OFF for 200ms to 300ms
+          - ON for 200ms to 300ms
+          - OFF for 200ms to 300ms
+          - ON for 200ms to 300ms
+          - OFF for 500ms to 1000ms
+        then:
+          - binary_sensor.template.publish:
+              id: problem_battery_low
+              state: ON
+        invalid_cooldown: 100ms
+      # Multiple collision
+      # The status LED will flash four times every two seconds. The multiple collision fault indication will continue to flash indefinitely or until a valid trigger has been received.
+      - timing:
+          - ON for 200ms to 300ms
+          - OFF for 200ms to 300ms
+          - ON for 200ms to 300ms
+          - OFF for 200ms to 300ms
+          - ON for 200ms to 300ms
+          - OFF for 200ms to 300ms
+          - ON for 200ms to 300ms
+          - OFF for 100ms to 600ms
+        then:
+          - binary_sensor.template.publish:
+              id: problem_multiple_collision
+              state: ON
+        invalid_cooldown: 100ms
+
+  - platform: template
+    id: problem_pillar_light_override
+
+  - platform: template
+    id: problem_no_mains
+
+  - platform: template
+    id: problem_battery_low
+
+  - platform: template
+    id: problem_multiple_collision
+
+text_sensor:
+  - platform: template
+    icon: mdi:information-outline
+    id: controller_status
+    name: "Controller Status"
+    lambda: |-
+      if (id(problem_pillar_light_override).state) {
+        return { "Pillar Light Override" };
+      }
+      if (id(problem_no_mains).state) {
+        return { "No Mains" };
+      }
+      if (id(problem_battery_low).state) {
+        return { "Battery Low" };
+      }
+      if (id(problem_multiple_collision).state) {
+        return { "Multiple Collision" };
+      }
+      return { "OK" };
+
+button:
+  - platform: output
+    output: trigger_output
+    id: trigger_button
+    disabled_by_default: true
+    duration: 1000ms
+    name: "Trigger"
+    on_press: 
+      then:
+        - logger.log:
+            format: "GPIO ${trigger_pin}: Triggered"
+    icon: mdi:gate
+  - platform: restart
+    name: Restart
+  - platform: safe_mode
+    name: "Restart (Safe Mode)"
+  - platform: shutdown
+    name: Shutdown
+
+dallas:
+  - pin: ${temp_sensor_pin}
+
+sensor:
+  - platform: dallas
+    address: ${temp_sensor_address}
+    name: "Temperature"
+  - platform: uptime
+    name: Uptime
+    update_interval: 60s
+  - platform: wifi_signal
+    name: "WiFi Signal dB"
+    id: wifi_signal_db
+    update_interval: 60s
+    entity_category: diagnostic
+  - platform: copy
+    source_id: wifi_signal_db
+    name: "WiFi Signal Percent"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "%"
+    entity_category: diagnostic
+    device_class: ""
