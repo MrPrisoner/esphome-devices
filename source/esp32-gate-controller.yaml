@@ -1,0 +1,58 @@
+esphome:
+  name: esp32-gate-controller
+  friendly_name: ESP32 Gate Controller
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+logger:
+
+api:
+  encryption:
+    key: !secret esp32_gatecontroller_api_encryption_key
+
+ota:
+  password: !secret esp32_gatecontroller_ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  ap:
+    ssid: !secret esp32_gatecontroller_ap_ssid
+    password: !secret esp32_gatecontroller_ap_password
+
+captive_portal:
+
+# GPIO23 - dallas temp sensor
+# GPIO27 - relay 1
+# GPIO26 - relay 2
+# GPIO25 - status led sensor
+
+button:
+  - platform: restart
+    name: Restart
+  - platform: safe_mode
+    name: "Restart (Safe Mode)"
+  - platform: shutdown
+    name: Shutdown
+
+sensor:
+  - platform: uptime
+    name: Uptime
+    update_interval: 60s
+  - platform: wifi_signal
+    name: "WiFi Signal dB"
+    id: wifi_signal_db
+    update_interval: 60s
+    entity_category: "diagnostic"
+  - platform: copy
+    source_id: wifi_signal_db
+    name: "WiFi Signal Percent"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "%"
+    entity_category: "diagnostic"
+    device_class: ""
