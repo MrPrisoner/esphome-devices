@@ -4,6 +4,7 @@ substitutions:
   status_led_pin: GPIO25
   temp_sensor_pin: GPIO23
   temp_sensor_address: "0xa33c01b556e48e28"
+  sim_led_pin: GPIO33
 
 esphome:
   name: esp32-gate-controller
@@ -33,6 +34,11 @@ wifi:
     password: !secret esp32_gatecontroller_ap_password
 
 captive_portal:
+
+globals:
+  - id: sim_mode
+    type: std::string
+    initial_value: ""
 
 cover:
   - platform: template
@@ -66,6 +72,19 @@ switch:
       then:
         - logger.log:
             format: "GPIO ${lock_pin}: Unlocked"
+            level: DEBUG
+  - platform: gpio
+    pin: ${sim_led_pin}
+    id: sim_switch
+    on_turn_on: 
+      then:
+        - logger.log:
+            format: "GPIO ${sim_led_pin}: ON"
+            level: DEBUG
+    on_turn_off: 
+      then:
+        - logger.log:
+            format: "GPIO ${sim_led_pin}: OFF"
             level: DEBUG
 
 binary_sensor:
@@ -228,6 +247,7 @@ text_sensor:
     icon: mdi:information-outline
     id: controller_status
     name: "Controller Status"
+    update_interval: 5s
     lambda: |-
       if (id(problem_pillar_light_override).state) {
         return { "Pillar Light Override" };
@@ -242,6 +262,13 @@ text_sensor:
         return { "Multiple Collision" };
       }
       return { "OK" };
+    filters:
+      - lambda: |-
+          static std::string last;
+          if (x == last)
+            return {};
+          last = x;
+          return x;
 
 button:
   - platform: output
@@ -255,6 +282,62 @@ button:
         - logger.log:
             format: "GPIO ${trigger_pin}: Triggered"
     icon: mdi:gate
+
+  - platform: template
+    id: sim_open
+    name: "Simulate Open"
+    entity_category: diagnostic
+    on_press: 
+      then:
+        - lambda: id(sim_mode) = "Open";
+        - script.execute: sim_script           
+
+  - platform: template
+    id: sim_closed
+    name: "Simulate Closed"
+    entity_category: diagnostic
+    on_press: 
+      then:
+        - lambda: id(sim_mode) = "Closed";
+        - script.execute: sim_script           
+
+  - platform: template
+    id: sim_no_mains
+    name: "Simulate No Mains"
+    entity_category: diagnostic
+    on_press: 
+      then:
+        - lambda: id(sim_mode) = "No Mains";
+        - script.execute: sim_script           
+
+  - platform: template
+    id: sim_battery_low
+    name: "Simulate Battery Low"
+    entity_category: diagnostic
+    on_press: 
+      then:
+        - lambda: id(sim_mode) = "Battery Low";
+        - script.execute: sim_script           
+
+  - platform: template
+    id: sim_multiple_collision
+    name: "Simulate Multiple Collision"
+    entity_category: diagnostic
+    on_press: 
+      then:
+        - lambda: id(sim_mode) = "Multiple Collision";
+        - script.execute: sim_script           
+
+  - platform: template
+    id: sim_stop
+    name: "Stop Simulation"
+    entity_category: diagnostic
+    on_press: 
+      then:
+        - lambda: id(sim_mode) = "";
+        - script.stop: sim_script           
+        - switch.turn_off: sim_switch
+
   - platform: restart
     name: Restart
   - platform: safe_mode
@@ -285,3 +368,72 @@ sensor:
     unit_of_measurement: "%"
     entity_category: diagnostic
     device_class: ""
+
+script:
+  id: sim_script
+  then:
+    - while:
+        condition:
+          not:
+            - lambda: 'return id(sim_mode) == "";'
+        then:
+          - if:
+              condition:
+                - lambda: 'return id(sim_mode) == "Open";'
+              then:
+                - switch.turn_on: sim_switch
+                - lambda: 'id(sim_mode) = "";'
+          - if:
+              condition:
+                - lambda: 'return id(sim_mode) == "Closed";'
+              then:
+                - switch.turn_off: sim_switch
+                - lambda: 'id(sim_mode) = "";'
+          - if:
+              condition:
+                - lambda: 'return id(sim_mode) == "No Mains";'
+              then:
+                - switch.turn_on: sim_switch
+                - delay: 250ms
+                - switch.turn_off: sim_switch
+                - delay: 250ms
+                - switch.turn_on: sim_switch
+                - delay: 250ms
+                - switch.turn_off: sim_switch
+                - delay: 1250ms
+          - if:
+              condition:
+                - lambda: 'return id(sim_mode) == "Battery Low";'
+              then:
+                - switch.turn_on: sim_switch
+                - delay: 250ms
+                - switch.turn_off: sim_switch
+                - delay: 250ms
+                - switch.turn_on: sim_switch
+                - delay: 250ms
+                - switch.turn_off: sim_switch
+                - delay: 250ms
+                - switch.turn_on: sim_switch
+                - delay: 250ms
+                - switch.turn_off: sim_switch
+                - delay: 750ms
+          - if:
+              condition:
+                - lambda: 'return id(sim_mode) == "Multiple Collision";'
+              then:
+                - switch.turn_on: sim_switch
+                - delay: 250ms
+                - switch.turn_off: sim_switch
+                - delay: 250ms
+                - switch.turn_on: sim_switch
+                - delay: 250ms
+                - switch.turn_off: sim_switch
+                - delay: 250ms
+                - switch.turn_on: sim_switch
+                - delay: 250ms
+                - switch.turn_off: sim_switch
+                - delay: 250ms
+                - switch.turn_on: sim_switch
+                - delay: 250ms
+                - switch.turn_off: sim_switch
+                - delay: 500ms
