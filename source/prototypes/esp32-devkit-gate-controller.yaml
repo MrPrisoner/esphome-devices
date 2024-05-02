@@ -5,11 +5,11 @@ substitutions:
   temp_sensor_pin: GPIO32
   temp_sensor_address: "0xa33c01b556e48e28"
   sim_led_pin: GPIO33
-  position_tracking_total_millis: "24000.0"
+  position_tracking_total_millis: "22500.0"
 
 esphome:
-  name: esp32-gate-controller
-  friendly_name: ESP32 Gate Controller
+  name: esp32-devkit-v1
+  friendly_name: ESP32 DEVKIT V1
 
 esp32:
   board: esp32dev
@@ -20,21 +20,17 @@ logger:
 
 api:
   encryption:
-    key: !secret esp32_gatecontroller_api_encryption_key
+    key: !secret esp32_devkit_api_encryption_key
 
 ota:
-  password: !secret esp32_gatecontroller_ota_password
+  password: !secret esp32_devkit_ota_password
 
 wifi:
-  ssid: !secret wifi2_ssid
-  password: !secret wifi2_password
-  power_save_mode: NONE
-
-  ap:
-    ssid: !secret esp32_gatecontroller_ap_ssid
-    password: !secret esp32_gatecontroller_ap_password
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
 
 captive_portal:
+
 
 globals:
   - id: sim_mode
@@ -264,7 +260,7 @@ text_sensor:
     icon: mdi:information-outline
     id: controller_status
     name: "Controller Status"
-    update_interval: 10s
+    update_interval: 5s
     lambda: |-
       if (id(problem_pillar_light_override).state) {
         return { "Pillar Light Override" };
@@ -452,7 +448,7 @@ script:
           else:
             - cover.close: gate_cover
       - delay: 
-          4000ms
+          2000ms
       - lambda: |-
           bool idle = id(gate_cover).current_operation == CoverOperation::COVER_OPERATION_IDLE;
           bool opening = id(gate_cover).current_operation == CoverOperation::COVER_OPERATION_OPENING;
@@ -465,7 +461,7 @@ script:
                 bool idle = id(gate_cover).current_operation == CoverOperation::COVER_OPERATION_IDLE;
                 bool opening = id(gate_cover).current_operation == CoverOperation::COVER_OPERATION_OPENING;
                 bool closing = id(gate_cover).current_operation == CoverOperation::COVER_OPERATION_CLOSING;
-                auto operation = opening ? "opening" : closing ? "closing" : idle ? "idle" : "unknown";
+                auto operation = opening ? "opening" : closing ? "closing" : "unknown";
                 bool result = opening && id(gate_cover).position < target_position || closing && id(gate_cover).position > target_position;
                 ESP_LOGD("set_position_script", "WHILE: operation: %s, target_position: %.2f, position: %.2f, result: %d", operation, target_position, id(gate_cover).position, result);
                 return (opening && id(gate_cover).position < target_position || closing && id(gate_cover).position > target_position);
