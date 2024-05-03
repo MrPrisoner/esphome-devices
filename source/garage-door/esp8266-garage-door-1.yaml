@@ -1,3 +1,8 @@
+substitutions:
+  relay_pin: GPIO14 #D5
+  open_pin: GPIO5 #D1
+  closed_pin: GPIO4 #D2
+
 esphome:
   name: esp8266-garage-door-1
   friendly_name: ESP8266 Garage Door 1
@@ -24,18 +29,105 @@ wifi:
 
 captive_portal:
 
+cover:
+  - platform: template
+    name: "Garage Door"
+    device_class: garage
+    id: door_cover
+    open_action:
+      - button.press: trigger_button
+    close_action:
+      - button.press: trigger_button
+    stop_action:
+      - button.press: trigger_button
+
+binary_sensor:
+  - platform: gpio
+    id: cover_open
+    pin: 
+      number: ${open_pin}
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    filters:
+      delayed_on_off: 500ms
+    on_state:
+      - logger.log:
+          format: "cover_open ${open_pin}: %d"
+          args: ['x']
+      - lambda: |-
+          if (id(cover_open).state && !id(cover_closed).state) {
+            id(door_cover).position = cover::COVER_OPEN;
+            id(door_cover).current_operation = CoverOperation::COVER_OPERATION_IDLE;
+            id(door_cover).publish_state();
+          } else if (!id(cover_open).state && id(cover_closed).state) {
+            id(door_cover).position = cover::COVER_CLOSED;
+            id(door_cover).current_operation = CoverOperation::COVER_OPERATION_IDLE;
+            id(door_cover).publish_state();
+          }
+          else if (!id(cover_open).state && !id(cover_closed).state) {
+            if (id(door_cover).position == cover::COVER_OPEN) {
+              id(door_cover).current_operation = CoverOperation::COVER_OPERATION_CLOSING;
+              id(door_cover).publish_state();
+            } else if (id(door_cover).position == cover::COVER_CLOSED) {
+              id(door_cover).current_operation = CoverOperation::COVER_OPERATION_OPENING;
+              id(door_cover).publish_state();
+            }
+          }
+  - platform: gpio
+    id: cover_closed
+    pin: 
+      number: ${closed_pin}
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    filters:
+      delayed_on_off: 500ms
+    on_state:
+      - logger.log:
+          format: "cover_closed ${closed_pin}: %d"
+          args: ['x']
+      - lambda: |-
+          if (id(cover_open).state && !id(cover_closed).state) {
+            id(door_cover).position = cover::COVER_OPEN;
+            id(door_cover).current_operation = CoverOperation::COVER_OPERATION_IDLE;
+            id(door_cover).publish_state();
+          } else if (!id(cover_open).state && id(cover_closed).state) {
+            id(door_cover).position = cover::COVER_CLOSED;
+            id(door_cover).current_operation = CoverOperation::COVER_OPERATION_IDLE;
+            id(door_cover).publish_state();
+          }
+          else if (!id(cover_open).state && !id(cover_closed).state) {
+            if (id(door_cover).position == cover::COVER_OPEN) {
+              id(door_cover).current_operation = CoverOperation::COVER_OPERATION_CLOSING;
+              id(door_cover).publish_state();
+            } else if (id(door_cover).position == cover::COVER_CLOSED) {
+              id(door_cover).current_operation = CoverOperation::COVER_OPERATION_OPENING;
+              id(door_cover).publish_state();
+            }
+          }
+
 output:
   - platform: gpio
-    pin: GPIO14
-    id: output_relay
+    pin: ${relay_pin}
+    id: relay_output
 
 button:
-  - platform: template
+  - platform: output
+    output: relay_output
+    id: trigger_button
+    entity_category: diagnostic
+    disabled_by_default: true
+    duration: 1000ms
     name: "Trigger"
-    on_press:
-      - output.turn_on: output_relay
-      - delay: 1000ms
-      - output.turn_off: output_relay
+    on_press: 
+      then:
+        - logger.log:
+            format: "trigger_button ${relay_pin}: Triggered"
+    icon: mdi:gate
+
   - platform: restart
     name: Restart
   - platform: safe_mode

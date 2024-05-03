@@ -5,7 +5,7 @@ substitutions:
   temp_sensor_pin: GPIO32
   temp_sensor_address: "0xa33c01b556e48e28"
   sim_led_pin: GPIO33
-  position_tracking_total_millis: "24000.0"
+  position_tracking_total_millis: "22500.0"
 
 esphome:
   name: esp32-gate-controller
@@ -438,7 +438,7 @@ script:
                 id(gate_cover).position += position_change;
                 ESP_LOGD("track_position_script", "delta: %lu, position_change: %.5f, position: %.5f", delta, position_change, id(gate_cover).position);
                 id(gate_cover).publish_state();
-            - delay: 500ms
+            - delay: 1000ms
 
   - id: set_position_script
     parameters: 
@@ -470,7 +470,7 @@ script:
                 ESP_LOGD("set_position_script", "WHILE: operation: %s, target_position: %.2f, position: %.2f, result: %d", operation, target_position, id(gate_cover).position, result);
                 return (opening && id(gate_cover).position < target_position || closing && id(gate_cover).position > target_position);
           then:
-            - delay: 500ms
+            - delay: 1000ms
       - cover.stop: gate_cover
                  
   - id: sim_script

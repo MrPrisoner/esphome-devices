@@ -1,7 +1,7 @@
 substitutions:
-  relay_pin: GPIO5
-  open_pin: GPIO13
-  closed_pin: GPIO14
+  relay_pin: GPIO5 #D1
+  open_pin: GPIO14 #D5
+  closed_pin: GPIO13 #D7
 
 esphome:
   name: esp8266-garage-door-2
@@ -32,7 +32,7 @@ captive_portal:
 cover:
   - platform: template
     name: "Garage Door"
-    device_class: gate
+    device_class: garage
     id: door_cover
     open_action:
       - button.press: trigger_button
