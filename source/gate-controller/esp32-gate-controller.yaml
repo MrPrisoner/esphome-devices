@@ -127,7 +127,7 @@ binary_sensor:
         then:
           - cover.template.publish:
               id: gate_cover
-              #state: CLOSED
+              state: CLOSED
               current_operation: IDLE
           - binary_sensor.template.publish:
               id: problem_pillar_light_override
@@ -149,7 +149,7 @@ binary_sensor:
         then:
           - cover.template.publish:
               id: gate_cover
-              #state: OPEN
+              # do not set state to open because it might be partially open. IDLE is enough to make the state of the cover read OPEN.
               current_operation: IDLE
         invalid_cooldown: 100ms
       # Closing
