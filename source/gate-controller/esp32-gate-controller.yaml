@@ -389,21 +389,26 @@ button:
   - platform: shutdown
     name: Shutdown
 
-dallas:
-  - pin: ${temp_sensor_pin}
-
 sensor:
-  - platform: dallas
-    address: ${temp_sensor_address}
-    name: "Temperature"
+
+  - platform: dht
+    pin: ${temp_sensor_pin}
+    temperature:
+      name: "Temperature"
+    humidity:
+      name: "Humidity"
+    update_interval: 60s
+
   - platform: uptime
     name: Uptime
     update_interval: 60s
+
   - platform: wifi_signal
     name: "WiFi Signal dB"
     id: wifi_signal_db
     update_interval: 60s
     entity_category: diagnostic
+
   - platform: copy
     source_id: wifi_signal_db
     name: "WiFi Signal Percent"
