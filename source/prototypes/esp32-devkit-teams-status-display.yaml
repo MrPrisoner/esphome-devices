@@ -1,0 +1,161 @@
+esphome:
+  name: esp32-devkit-v1
+  friendly_name: ESP32 DEVKIT V1
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret esp32_devkit_api_encryption_key
+
+ota:
+  platform: esphome
+  password: !secret esp32_devkit_ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+captive_portal:
+
+button:
+  - platform: restart
+    name: Restart
+  - platform: safe_mode
+    name: "Restart (Safe Mode)"
+  - platform: shutdown
+    name: Shutdown
+
+sensor:
+
+  # Diagnostic
+
+  - platform: uptime
+    name: Uptime
+    update_interval: 60s
+
+  - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
+    name: "WiFi Signal dB"
+    id: wifi_signal_db
+    update_interval: 60s
+    entity_category: "diagnostic"
+
+  - platform: copy # Reports the WiFi signal strength in %
+    source_id: wifi_signal_db
+    name: "WiFi Signal Percent"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "%"
+    entity_category: "diagnostic"
+    device_class: ""
+
+binary_sensor:
+
+  - platform: homeassistant
+    id: andrie_teams_meeting
+    entity_id: binary_sensor.andrie_teams_meeting
+  - platform: homeassistant
+    id: andrie_teams_microphone
+    entity_id: binary_sensor.andrie_teams_microphone
+  - platform: homeassistant
+    id: andrie_teams_video
+    entity_id: binary_sensor.andrie_teams_video
+  - platform: homeassistant
+    id: andrie_teams_sharing
+    entity_id: binary_sensor.andrie_teams_sharing
+
+  - platform: homeassistant
+    id: rinda_teams_meeting
+    entity_id: binary_sensor.rinda_teams_meeting
+  - platform: homeassistant
+    id: rinda_teams_microphone
+    entity_id: binary_sensor.rinda_teams_microphone
+  - platform: homeassistant
+    id: rinda_teams_video
+    entity_id: binary_sensor.rinda_teams_video
+  - platform: homeassistant
+    id: rinda_teams_sharing
+    entity_id: binary_sensor.rinda_teams_sharing
+
+# OLED Display 128x128: SSD1327
+
+spi:
+  mosi_pin: GPIO23 # DIN (blue)
+  clk_pin: GPIO18 # CLK (yellow)
+
+font:
+  # gfonts://family[@weight]
+  - file: "gfonts://Roboto"
+    id: roboto_l
+    size: 24
+  - file: "gfonts://Roboto"
+    id: roboto_s
+    size: 16
+  
+color:
+  - id: color_bright
+    white: 100%
+  - id: color_dimmed
+    white: 50%
+
+display:
+  - platform: ssd1327_spi
+    model: "SSD1327 128x128"
+    cs_pin: GPIO19 # CS (orange)
+    dc_pin: GPIO21 # DC (green)
+    reset_pin: GPIO22 # RST (white)
+    brightness: 100%
+    rotation: 90
+    lambda: |-
+      // Andrie header
+      it.printf(0, 0, id(roboto_s), "Andrie");
+
+      // Andrie icons
+      it.image(0, 24, id(andrie_teams_meeting).state ? icon_phone : icon_phone_off, id(andrie_teams_meeting).state ? id(color_bright) : id(color_dimmed));
+      it.image(32, 24, id(andrie_teams_microphone).state ? icon_microphone : icon_microphone_off, id(andrie_teams_microphone).state ? id(color_bright) : id(color_dimmed));
+      it.image(64, 24, id(andrie_teams_video).state ? icon_webcam : icon_webcam_off, id(andrie_teams_video).state ? id(color_bright) : id(color_dimmed));
+      it.image(96, 24, id(andrie_teams_sharing).state ? icon_projector_screen : icon_projector_screen_off, id(andrie_teams_sharing).state ? id(color_bright) : id(color_dimmed));
+
+      // Rinda header
+      it.printf(0, 60, id(roboto_s), "Rinda");
+
+      // Rinda icons
+      it.image(0, 84, id(rinda_teams_meeting).state ? icon_phone : icon_phone_off, id(rinda_teams_meeting).state ? id(color_bright) : id(color_dimmed));
+      it.image(32, 84, id(rinda_teams_microphone).state ? icon_microphone : icon_microphone_off, id(rinda_teams_microphone).state ? id(color_bright) : id(color_dimmed));
+      it.image(64, 84, id(rinda_teams_video).state ? icon_webcam : icon_webcam_off, id(rinda_teams_video).state ? id(color_bright) : id(color_dimmed));
+      it.image(96, 84, id(rinda_teams_sharing).state ? icon_projector_screen : icon_projector_screen_off, id(rinda_teams_sharing).state ? id(color_bright) : id(color_dimmed));
+
+image:
+
+  - file: mdi:phone
+    id: icon_phone
+    resize: 28x28
+  - file: mdi:phone-off
+    id: icon_phone_off
+    resize: 28x28
+  - file: mdi:microphone
+    id: icon_microphone
+    resize: 28x28
+  - file: mdi:microphone-off
+    id: icon_microphone_off
+    resize: 28x28
+  - file: mdi:webcam
+    id: icon_webcam
+    resize: 28x28
+  - file: mdi:webcam-off
+    id: icon_webcam_off
+    resize: 28x28
+  - file: mdi:projector-screen
+    id: icon_projector_screen
+    resize: 28x28
+  - file: mdi:projector-screen-off
+    id: icon_projector_screen_off
+    resize: 28x28
+
