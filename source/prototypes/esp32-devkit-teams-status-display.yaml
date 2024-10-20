@@ -58,6 +58,7 @@ sensor:
 
 binary_sensor:
 
+  # Andrie template binary sensors
   - platform: homeassistant
     id: andrie_teams_meeting
     entity_id: binary_sensor.andrie_teams_meeting
@@ -70,7 +71,14 @@ binary_sensor:
   - platform: homeassistant
     id: andrie_teams_sharing
     entity_id: binary_sensor.andrie_teams_sharing
+  - platform: homeassistant
+    id: andrie_teams_blurred
+    entity_id: binary_sensor.andrie_teams_background_blurred
+  - platform: homeassistant
+    id: andrie_teams_recording
+    entity_id: binary_sensor.andrie_teams_recording
 
+  # Rinda template binary sensors
   - platform: homeassistant
     id: rinda_teams_meeting
     entity_id: binary_sensor.rinda_teams_meeting
@@ -83,6 +91,12 @@ binary_sensor:
   - platform: homeassistant
     id: rinda_teams_sharing
     entity_id: binary_sensor.rinda_teams_sharing
+  - platform: homeassistant
+    id: rinda_teams_blurred
+    entity_id: binary_sensor.rinda_teams_background_blurred
+  - platform: homeassistant
+    id: rinda_teams_recording
+    entity_id: binary_sensor.rinda_teams_recording
 
 # OLED Display 128x128: SSD1327
 
@@ -113,24 +127,53 @@ display:
     reset_pin: GPIO22 # RST (white)
     brightness: 100%
     rotation: 90
+
+    # Horizontal rows    
+    # lambda: |-
+    #   // Andrie header
+    #   it.printf(0, 0, id(roboto_s), "Andrie");
+
+    #   // Andrie icons
+    #   it.image(0, 24, id(andrie_teams_meeting).state ? icon_phone : icon_phone_off, id(andrie_teams_meeting).state ? id(color_bright) : id(color_dimmed));
+    #   it.image(32, 24, id(andrie_teams_microphone).state ? icon_microphone : icon_microphone_off, id(andrie_teams_microphone).state ? id(color_bright) : id(color_dimmed));
+    #   it.image(64, 24, id(andrie_teams_video).state ? icon_webcam : icon_webcam_off, id(andrie_teams_video).state ? id(color_bright) : id(color_dimmed));
+    #   it.image(96, 24, id(andrie_teams_sharing).state ? icon_projector_screen : icon_projector_screen_off, id(andrie_teams_sharing).state ? id(color_bright) : id(color_dimmed));
+
+    #   // Rinda header
+    #   it.printf(0, 60, id(roboto_s), "Rinda");
+
+    #   // Rinda icons
+    #   it.image(0, 84, id(rinda_teams_meeting).state ? icon_phone : icon_phone_off, id(rinda_teams_meeting).state ? id(color_bright) : id(color_dimmed));
+    #   it.image(32, 84, id(rinda_teams_microphone).state ? icon_microphone : icon_microphone_off, id(rinda_teams_microphone).state ? id(color_bright) : id(color_dimmed));
+    #   it.image(64, 84, id(rinda_teams_video).state ? icon_webcam : icon_webcam_off, id(rinda_teams_video).state ? id(color_bright) : id(color_dimmed));
+    #   it.image(96, 84, id(rinda_teams_sharing).state ? icon_projector_screen : icon_projector_screen_off, id(rinda_teams_sharing).state ? id(color_bright) : id(color_dimmed));
+    
+    # 2 columns
     lambda: |-
       // Andrie header
       it.printf(0, 0, id(roboto_s), "Andrie");
 
       // Andrie icons
       it.image(0, 24, id(andrie_teams_meeting).state ? icon_phone : icon_phone_off, id(andrie_teams_meeting).state ? id(color_bright) : id(color_dimmed));
-      it.image(32, 24, id(andrie_teams_microphone).state ? icon_microphone : icon_microphone_off, id(andrie_teams_microphone).state ? id(color_bright) : id(color_dimmed));
-      it.image(64, 24, id(andrie_teams_video).state ? icon_webcam : icon_webcam_off, id(andrie_teams_video).state ? id(color_bright) : id(color_dimmed));
-      it.image(96, 24, id(andrie_teams_sharing).state ? icon_projector_screen : icon_projector_screen_off, id(andrie_teams_sharing).state ? id(color_bright) : id(color_dimmed));
+      it.image(30, 24, id(andrie_teams_microphone).state ? icon_microphone : icon_microphone_off, id(andrie_teams_microphone).state ? id(color_bright) : id(color_dimmed));
+      it.image(0, 56, id(andrie_teams_video).state ? icon_webcam : icon_webcam_off, id(andrie_teams_video).state ? id(color_bright) : id(color_dimmed));
+      it.image(30, 56, id(andrie_teams_sharing).state ? icon_projector_screen : icon_projector_screen_off, id(andrie_teams_sharing).state ? id(color_bright) : id(color_dimmed));
+      it.image(0, 88, id(andrie_teams_blurred).state ? icon_blur : icon_blur_off, id(andrie_teams_blurred).state ? id(color_bright) : id(color_dimmed));
+      it.image(30, 88, id(andrie_teams_recording).state ? icon_recording : icon_recording_off, id(andrie_teams_recording).state ? id(color_bright) : id(color_dimmed));
 
       // Rinda header
-      it.printf(0, 60, id(roboto_s), "Rinda");
+      it.printf(70, 0, id(roboto_s), "Rinda");
 
       // Rinda icons
-      it.image(0, 84, id(rinda_teams_meeting).state ? icon_phone : icon_phone_off, id(rinda_teams_meeting).state ? id(color_bright) : id(color_dimmed));
-      it.image(32, 84, id(rinda_teams_microphone).state ? icon_microphone : icon_microphone_off, id(rinda_teams_microphone).state ? id(color_bright) : id(color_dimmed));
-      it.image(64, 84, id(rinda_teams_video).state ? icon_webcam : icon_webcam_off, id(rinda_teams_video).state ? id(color_bright) : id(color_dimmed));
-      it.image(96, 84, id(rinda_teams_sharing).state ? icon_projector_screen : icon_projector_screen_off, id(rinda_teams_sharing).state ? id(color_bright) : id(color_dimmed));
+      it.image(70, 24, id(rinda_teams_meeting).state ? icon_phone : icon_phone_off, id(rinda_teams_meeting).state ? id(color_bright) : id(color_dimmed));
+      it.image(100, 24, id(rinda_teams_microphone).state ? icon_microphone : icon_microphone_off, id(rinda_teams_microphone).state ? id(color_bright) : id(color_dimmed));
+      it.image(70, 56, id(rinda_teams_video).state ? icon_webcam : icon_webcam_off, id(rinda_teams_video).state ? id(color_bright) : id(color_dimmed));
+      it.image(100, 56, id(rinda_teams_sharing).state ? icon_projector_screen : icon_projector_screen_off, id(rinda_teams_sharing).state ? id(color_bright) : id(color_dimmed));
+      it.image(70, 88, id(rinda_teams_blurred).state ? icon_blur : icon_blur_off, id(rinda_teams_blurred).state ? id(color_bright) : id(color_dimmed));
+      it.image(100, 88, id(rinda_teams_recording).state ? icon_recording : icon_recording_off, id(rinda_teams_recording).state ? id(color_bright) : id(color_dimmed));
+
+      // Vertical line
+      it.line(64, 0, 64, 116, id(color_dimmed));
 
 image:
 
@@ -157,5 +200,17 @@ image:
     resize: 28x28
   - file: mdi:projector-screen-off
     id: icon_projector_screen_off
+    resize: 28x28
+  - file: mdi:blur
+    id: icon_blur
+    resize: 28x28
+  - file: mdi:blur-off
+    id: icon_blur_off
+    resize: 28x28
+  - file: mdi:record-circle-outline
+    id: icon_recording
+    resize: 28x28
+  - file: mdi:power-off
+    id: icon_recording_off
     resize: 28x28
 
