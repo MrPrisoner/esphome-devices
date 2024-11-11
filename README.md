@@ -56,3 +56,14 @@ Components used:
 
 * ESP32 Wemos Mini D1 development board.
 * Waterproof ultrasonic distance sensor module.
+
+## Teams Status Display
+
+[View Code](https://github.com/MrPrisoner/esphome-devices/tree/main/source/display-teams)
+
+Displays Teams meeting status indicators.
+
+* Indicates the Teams meeting status of 2 people (me and the wife).
+* Uses sensors from Home Assistant, populated by [teams-status-rs])(https://github.com/AntoineGS/teams-status-rs).
+* Includes a temperature/humidity sensor.
+* Wall mounted 3D case, designed and printed by Derrick.
