@@ -1,24 +1,14 @@
-substitutions:
-  temp_sensor_pin: GPIO17 # D3 - green
-  mosi_pin: GPIO23 # D7 - DIN (blue)
-  clk_pin: GPIO18 # D5 - CLK (yellow)
-  cs_pin: GPIO19 # D6 - CS (orange)
-  dc_pin: GPIO21 # D2 - DC (green)
-  reset_pin: GPIO22 #D1 - RST (white)
-
 esphome:
-  name: esp32-teams-monitor-v2
-  friendly_name: ESP32 Teams Monitor v2
+  name: esp32-teams-monitor
+  friendly_name: ESP32 Teams Monitor
 
 esp32:
-  board: esp32dev
+  board: esp32-s2-saola-1
   framework:
     type: arduino
 
-# Enable logging
 logger:
 
-# Enable Home Assistant API
 api:
   encryption:
     key: !secret esp32_teamsmonitor_api_encryption_key
@@ -30,15 +20,22 @@ ota:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
-  use_address: !secret esp32_teamsmonitor_ip
+  #use_address: !secret esp32_teamsmonitorv_ip
 
-  # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
     ssid: !secret esp32_teamsmonitor_ap_ssid
     password: !secret esp32_teamsmonitor_ap_password
 
 captive_portal:
-    
+
+substitutions:
+  temp_sensor_pin: GPIO16 # green
+  mosi_pin: GPIO35 # DIN (blue)
+  clk_pin: GPIO33 # CLK (yellow)
+  cs_pin: GPIO37 # CS (orange)
+  dc_pin: GPIO39 # DC (green)
+  reset_pin: GPIO18 # RST (white)
+
 button:
   - platform: restart
     name: Restart
@@ -151,55 +148,6 @@ display:
     reset_pin: ${reset_pin}
     brightness: 100%
     rotation: 270
-
-    # Horizontal rows    
-    # lambda: |-
-    #   // Andrie header
-    #   it.printf(0, 0, id(roboto_s), "Andrie");
-
-    #   // Andrie icons
-    #   it.image(0, 24, id(andrie_teams_meeting).state ? icon_phone : icon_phone_off, id(andrie_teams_meeting).state ? id(color_bright) : id(color_dimmed));
-    #   it.image(32, 24, id(andrie_teams_microphone).state ? icon_microphone : icon_microphone_off, id(andrie_teams_microphone).state ? id(color_bright) : id(color_dimmed));
-    #   it.image(64, 24, id(andrie_teams_video).state ? icon_webcam : icon_webcam_off, id(andrie_teams_video).state ? id(color_bright) : id(color_dimmed));
-    #   it.image(96, 24, id(andrie_teams_sharing).state ? icon_projector_screen : icon_projector_screen_off, id(andrie_teams_sharing).state ? id(color_bright) : id(color_dimmed));
-
-    #   // Rinda header
-    #   it.printf(0, 60, id(roboto_s), "Rinda");
-
-    #   // Rinda icons
-    #   it.image(0, 84, id(rinda_teams_meeting).state ? icon_phone : icon_phone_off, id(rinda_teams_meeting).state ? id(color_bright) : id(color_dimmed));
-    #   it.image(32, 84, id(rinda_teams_microphone).state ? icon_microphone : icon_microphone_off, id(rinda_teams_microphone).state ? id(color_bright) : id(color_dimmed));
-    #   it.image(64, 84, id(rinda_teams_video).state ? icon_webcam : icon_webcam_off, id(rinda_teams_video).state ? id(color_bright) : id(color_dimmed));
-    #   it.image(96, 84, id(rinda_teams_sharing).state ? icon_projector_screen : icon_projector_screen_off, id(rinda_teams_sharing).state ? id(color_bright) : id(color_dimmed));
-
-    # 2 columns - with strike-through icons
-    # lambda: |-
-    #   // Andrie header
-    #   it.printf(0, 0, id(roboto_s), "Andrie");
-
-    #   // Andrie icons
-    #   it.image(0, 24, id(andrie_teams_meeting).state ? icon_phone : icon_phone_off, id(andrie_teams_meeting).state ? id(color_bright) : id(color_dimmed));
-    #   it.image(30, 24, id(andrie_teams_microphone).state ? icon_microphone : icon_microphone_off, id(andrie_teams_microphone).state ? id(color_bright) : id(color_dimmed));
-    #   it.image(0, 56, id(andrie_teams_video).state ? icon_webcam : icon_webcam_off, id(andrie_teams_video).state ? id(color_bright) : id(color_dimmed));
-    #   it.image(30, 56, id(andrie_teams_sharing).state ? icon_projector_screen : icon_projector_screen_off, id(andrie_teams_sharing).state ? id(color_bright) : id(color_dimmed));
-    #   it.image(0, 88, id(andrie_teams_blurred).state ? icon_blur : icon_blur_off, id(andrie_teams_blurred).state ? id(color_bright) : id(color_dimmed));
-    #   it.image(30, 88, id(andrie_teams_recording).state ? icon_recording : icon_recording_off, id(andrie_teams_recording).state ? id(color_bright) : id(color_dimmed));
-
-    #   // Rinda header
-    #   it.printf(70, 0, id(roboto_s), "Rinda");
-
-    #   // Rinda icons
-    #   it.image(70, 24, id(rinda_teams_meeting).state ? icon_phone : icon_phone_off, id(rinda_teams_meeting).state ? id(color_bright) : id(color_dimmed));
-    #   it.image(100, 24, id(rinda_teams_microphone).state ? icon_microphone : icon_microphone_off, id(rinda_teams_microphone).state ? id(color_bright) : id(color_dimmed));
-    #   it.image(70, 56, id(rinda_teams_video).state ? icon_webcam : icon_webcam_off, id(rinda_teams_video).state ? id(color_bright) : id(color_dimmed));
-    #   it.image(100, 56, id(rinda_teams_sharing).state ? icon_projector_screen : icon_projector_screen_off, id(rinda_teams_sharing).state ? id(color_bright) : id(color_dimmed));
-    #   it.image(70, 88, id(rinda_teams_blurred).state ? icon_blur : icon_blur_off, id(rinda_teams_blurred).state ? id(color_bright) : id(color_dimmed));
-    #   it.image(100, 88, id(rinda_teams_recording).state ? icon_recording : icon_recording_off, id(rinda_teams_recording).state ? id(color_bright) : id(color_dimmed));
-
-    #   // Vertical line
-    #   it.line(64, 0, 64, 116, id(color_dimmed));
-
-    # 2 columns
     lambda: |-
       // Andrie header
       it.printf(2, 0, id(roboto_s), "Andrie");
