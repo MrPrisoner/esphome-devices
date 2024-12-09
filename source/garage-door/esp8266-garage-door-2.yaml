@@ -17,11 +17,13 @@ api:
     key: !secret esp8266_garagedoor2_api_encryption_key
 
 ota:
+  platform: esphome
   password: !secret esp8266_garagedoor2_ota_password
 
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+  use_address: !secret esp8266_garagedoor2_ip
 
   ap:
     ssid: !secret esp8266_garagedoor2_ap_ssid
@@ -44,6 +46,7 @@ cover:
 binary_sensor:
   - platform: gpio
     id: cover_open
+    name: cover_open
     pin: 
       number: ${open_pin}
       inverted: true
@@ -77,6 +80,7 @@ binary_sensor:
           }
   - platform: gpio
     id: cover_closed
+    name: cover_closed
     pin: 
       number: ${closed_pin}
       inverted: true

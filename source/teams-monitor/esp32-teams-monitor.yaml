@@ -7,8 +7,8 @@ substitutions:
   reset_pin: GPIO22 #D1 - RST (white)
 
 esphome:
-  name: esp32-devkit-v1
-  friendly_name: ESP32 Devkit v1
+  name: esp32-teams-monitor-v2
+  friendly_name: ESP32 Teams Monitor v2
 
 esp32:
   board: esp32dev
@@ -21,29 +21,43 @@ logger:
 # Enable Home Assistant API
 api:
   encryption:
-    key: !secret esp32_devkit_api_encryption_key
+    key: !secret esp32_teamsmonitor_api_encryption_key
 
 ota:
   - platform: esphome
-    password: !secret esp32_devkit_ota_password
+    password: !secret esp32_teamsmonitor_ota_password
 
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+  use_address: !secret esp32_teamsmonitor_ip
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: !secret esp32_teamsmonitor_ap_ssid
+    password: !secret esp32_teamsmonitor_ap_password
 
 captive_portal:
+    
+button:
+  - platform: restart
+    name: Restart
+  - platform: safe_mode
+    name: "Restart (Safe Mode)"
+  - platform: shutdown
+    name: Shutdown
 
 sensor:
 
-  # - platform: dht
-  #   pin: ${temp_sensor_pin}
-  #   temperature:
-  #     id: dht_temperature
-  #     name: "Temperature"
-  #   humidity:
-  #     id: dht_humidity
-  #     name: "Humidity"
-  #   update_interval: 60s
+  - platform: dht
+    pin: ${temp_sensor_pin}
+    temperature:
+      id: dht_temperature
+      name: "Temperature"
+    humidity:
+      id: dht_humidity
+      name: "Humidity"
+    update_interval: 60s
 
   # Diagnostic
 
@@ -136,7 +150,7 @@ display:
     dc_pin: ${dc_pin}
     reset_pin: ${reset_pin}
     brightness: 100%
-    rotation: 180
+    rotation: 270
 
     # Horizontal rows    
     # lambda: |-
@@ -217,9 +231,9 @@ display:
 
       // Temp & Humidity
       it.image(0, 110, icon_thermometer, id(color_bright));
-      //it.printf(20, 110, id(roboto_s), "%.1f", id(dht_temperature).state);
+      it.printf(20, 110, id(roboto_s), "%.1f", id(dht_temperature).state);
       it.image(70, 110, icon_water, id(color_bright));
-      //it.printf(90, 110, id(roboto_s), "%.1f", id(dht_humidity).state);
+      it.printf(90, 110, id(roboto_s), "%.1f", id(dht_humidity).state);
 
 
 image:
