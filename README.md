@@ -52,7 +52,7 @@ Displays Teams meeting status indicators.
 * Includes a temperature/humidity sensor.
 * Wall mounted 3D case, designed and printed by Derrick.
 
-[More detail and photos...](https://github.com/MrPrisoner/esphome-devices/tree/main/source/display-teams)
+[More detail and photos...](https://github.com/MrPrisoner/esphome-devices/tree/main/source/teams-monitor)
 
 ## Prepaid Meter Reader
 
