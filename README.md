@@ -43,7 +43,7 @@ Measure the water level inside a tank using an ultrasonic distance sensor.
 
 ## Teams Status Display
 
-<img src="source/teams-monitor/assets/teams-display-8.jpg" style="float:right; width:200px">
+<img src="source/teams-monitor/assets/teams-display-8-small.jpg" style="float:right; width:200px">
 
 Displays Teams meeting status indicators.
 
@@ -57,6 +57,10 @@ Displays Teams meeting status indicators.
 ## Prepaid Meter Reader
 
 <img src="source/prepaid-meter-camera/assets/prepaid-camera-thumb.jpg" style="float:right; width:200px">
+
+Reads the remaining balance from a prepaid electricity meter's LCD screen.
+
+Still a work in progress...
 
 * Captures a photo of the prepaid meter.
 * Uses a Home Assistant script to process the image using Seven Segments OCR.
