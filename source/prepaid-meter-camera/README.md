@@ -62,9 +62,9 @@ I installed [SSOCR](https://www.unix-ag.uni-kl.de/~auerswal/ssocr/) on my Raspbe
 ./ssocr crop 718 586 225 155 rotate 180 shear 12 -P -D -d 2-3 -t 6 -o processed.jpg cam-snapshot.jpg
 ```
 
-Note the order of the parameters, because the Home Assistant integration implements a specific order, e.g. first crop, then rotate. This affects the x/y position of the cropped area.
+Take note of the order of the parameters – the Home Assistant SSOCR integration implements a specific order, e.g. first crop, then rotate. This affects the x/y position of the cropped area.
 
-Using my snapshot (see photos below) yields the following results:
+Using my snapshot (see photos section) yields the following results:
 
 <img src="assets/processed.jpg">
 <img src="assets/testbild.png">
@@ -85,6 +85,20 @@ image_processing:
     extra_arguments: '-D shear 12 -o processed.jpg'
     source:
       - entity_id: camera.local_file_esp32_prepaid_cam
+```
+
+### Template sensor
+
+The template sensor exposes the value with the correct unit of measurement and other metadata to be used in dashboards and automations.
+
+```yaml
+sensor:
+  - platform: template
+    sensors:
+      power_meter:
+        value_template: "{{ states('image_processing.sevensegment_ocr_local_file_esp32_prepaid_cam') }}"
+        friendly_name: "Prepaid Meter Balance"
+        unit_of_measurement: "kWh"
 ```
 
 ## Photos
