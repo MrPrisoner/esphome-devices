@@ -4,24 +4,19 @@ Projects built with [ESP Home](https://esphome.io/).
 
 ## Garage Door Controller
 
-[View Code](https://github.com/MrPrisoner/esphome-devices/tree/main/source/garage-door)
+<img src="source/garage-door/assets/garage-door-1.jpg" style="float:right; width:200px">
 
 A simple relay controller.
 
 * Control the garage door motor (open, close).
-* Read the door position using reed switches (TODO).
+* Read the door position using magnetic sensors.
+* Pulls power from the motor controller using DC-DC buck converter.
 
-Components used:
-
-* ESP8266 Wemos Mini D1 development board.
-* DC-DC Step-Down Buck Module (8-28V to 5V)
-* 3V Relay module.
-* 2x Magnetic door switches.
-* Small prototype board.
+[More detail and photos...](https://github.com/MrPrisoner/esphome-devices/tree/main/source/garage-door)
 
 ## Gate Motor Controller
 
-[View Code](https://github.com/MrPrisoner/esphome-devices/tree/main/source/gate-controller)
+<img src="source/gate-controller/assets/top.jpg" style="float:right; width:200px">
 
 Built for a Centurion D5 Evo controller.
 
@@ -31,19 +26,11 @@ Built for a Centurion D5 Evo controller.
 * Simulate LED timings when connecting the sim pin to the status led pin.
 * Includes a temperature sensor because that box gets hot!
 
-Components used:
-
-* ESP32 development board
-* DC-DC Step-Down Buck Module (8-28V to 5V)
-* 2x 5V Relay modules
-* Dallas temperature sensor module
-* Prototype board
-
-Credit: adapted from [wernerhp's implementation](https://github.com/wernerhp/esphome/tree/main/centurion-d5-evo).
+[More detail and photos...](https://github.com/MrPrisoner/esphome-devices/tree/main/source/gate-controller)
 
 ## Water Tank Level Sensor
 
-[View Code](https://github.com/MrPrisoner/esphome-devices/tree/main/source/water-tank)
+<img src="source/water-tank/assets/completed.jpg" style="float:right; width:200px">
 
 Measure the water level inside a tank using an ultrasonic distance sensor.
 
@@ -52,18 +39,28 @@ Measure the water level inside a tank using an ultrasonic distance sensor.
 * Calculate how full the tank is.
 * Note that this sensor is installed in 2 connected tanks, thus the calculations are adjusted accordingly.
 
-Components used:
-
-* ESP32 Wemos Mini D1 development board.
-* Waterproof ultrasonic distance sensor module.
+[More detail and photos...](https://github.com/MrPrisoner/esphome-devices/tree/main/source/water-tank)
 
 ## Teams Status Display
 
-[View Code](https://github.com/MrPrisoner/esphome-devices/tree/main/source/display-teams)
+<img src="source/teams-monitor/assets/teams-display-8.jpg" style="float:right; width:200px">
 
 Displays Teams meeting status indicators.
 
 * Indicates the Teams meeting status of 2 people (me and the wife).
-* Uses sensors from Home Assistant, populated by [teams-status-rs])(https://github.com/AntoineGS/teams-status-rs).
+* Uses sensors from Home Assistant, populated by [teams-status-rs](https://github.com/AntoineGS/teams-status-rs).
 * Includes a temperature/humidity sensor.
 * Wall mounted 3D case, designed and printed by Derrick.
+
+[More detail and photos...](https://github.com/MrPrisoner/esphome-devices/tree/main/source/display-teams)
+
+## Prepaid Meter Reader
+
+<img src="source/prepaid-meter-camera/assets/prepaid-camera-thumb.jpg" style="float:right; width:200px">
+
+* Captures a photo of the prepaid meter.
+* Uses a Home Assistant script to process the image using Seven Segments OCR.
+* Uses a template sensor to provide the reading.
+* Wall mounted 3D case, designed and printed by Derrick.
+
+[More detail and photos...](https://github.com/MrPrisoner/esphome-devices/tree/main/source/prepaid-meter-camera)
